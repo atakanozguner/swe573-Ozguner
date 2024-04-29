@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  swe573-postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: swe573db
+      POSTGRES_USER: swe573user
+      POSTGRES_PASSWORD: swe573password
+
+
+  web:
+    build: .
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - swe573-postgres
