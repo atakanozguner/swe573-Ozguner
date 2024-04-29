@@ -1,6 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-import psycopg2
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from .forms import CommunityForm, TemplateFieldForm
+from .models import Community
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
 def homepage(request):
@@ -10,38 +14,14 @@ def register(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        # email = request.POST.get('email')
         
-        try:
-            conn = psycopg2.connect(
-                dbname="swe573db",
-                user="swe573user",
-                password="swe573password",
-                host="swe573-postgres",
-                port="5432"
-            )
-            cursor = conn.cursor()
-            
-            # Check if username already exists
-            cursor.execute("SELECT * FROM swe573app_user WHERE username = %s", (username,))
-            if cursor.fetchone() is not None:
-                messages.error(request, 'Username already exists.')
-                return redirect('register')
-            
-            # Insert new user into the database
-            cursor.execute("INSERT INTO swe573app_user (username, password) VALUES (%s, %s)", (username, password))
-            conn.commit()
-            
-            # Optionally, you can log the user in automatically after registration
-            messages.success(request, 'Registration successful. You can now login.')
-            return redirect('user_login')
-        except psycopg2.Error as e:
-            print("Error connecting to PostgreSQL database:", e)
-            messages.error(request, 'Error registering user.')
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
             return redirect('register')
-        finally:
-            if conn is not None:
-                conn.close()
+        
+        User.objects.create_user(username=username, password=password)
+        messages.success(request, 'Registration successful. You can now login.')
+        return redirect('user_login')
     else:
         return render(request, 'register.html')
 
@@ -50,38 +30,59 @@ def user_login(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        try:
-            conn = psycopg2.connect(
-                dbname="swe573db",
-                user="swe573user",
-                password="swe573password",
-                host="swe573-postgres",
-                port="5432"
-            )
-            cursor = conn.cursor()
-            
-            # Check if username and password match
-            cursor.execute("SELECT * FROM swe573app_user WHERE username = %s AND password = %s", (username, password))
-            user = cursor.fetchone()
-            if user is not None:
-                messages.success(request, 'Login successful.')
-                request.session['username'] = username
-                # Optionally, you can set session variables to maintain user authentication
-                return redirect('homepage')
-            else:
-                messages.error(request, 'Invalid username or password.')
-                return render(request, 'login.html')
-        except psycopg2.Error as e:
-            print("Error connecting to PostgreSQL database:", e)
-            messages.error(request, 'Error logging in.')
-            return redirect('login')
-        finally:
-            if conn is not None:
-                conn.close()
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, 'Login successful.')
+            request.session['username'] = username
+            return redirect('homepage')
+        else:
+            messages.error(request, 'Invalid username or password.')
+            return render(request, 'login.html')
     else:
         return render(request, 'login.html')
-    
+
+
 def user_logout(request):
-    if 'username' in request.session:
-        del request.session['username']
+    logout(request)
     return render(request, 'logout.html')
+
+def communities(request):
+    if 'username' in request.session:
+        communities = Community.objects.all()
+        return render(request, 'communities.html', {'communities': communities})
+    else:
+        return redirect('user_login')
+
+def create_community(request):
+    if 'username' not in request.session:
+        return redirect('user_login')
+
+    if request.method == 'POST':
+        form = CommunityForm(request.POST)
+        if form.is_valid():
+            community = form.save(commit=False)
+            try:
+                community.created_by = User.objects.get(username=request.session['username'])
+            except ObjectDoesNotExist:
+                messages.error(request, 'User does not exist.')
+                return redirect('user_login')
+            community.save()
+            return redirect('communities')
+    else:
+        form = CommunityForm()
+
+    return render(request, 'create_community.html', {'form': form})
+
+def community_detail(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+
+    if request.method == 'POST':
+        form = TemplateFieldForm(request.POST)
+        if form.is_valid():
+            field = form.cleaned_data
+            community.template.fields.append(field)
+            community.template.save()
+    else:
+        form = TemplateFieldForm()
+    return render(request, 'community_detail.html', {'community': community, 'form': form})

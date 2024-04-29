@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from swe573app.views import homepage, register, user_login, user_logout
+from swe573app.views import homepage, register, user_login, user_logout, communities, create_community, community_detail
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +24,7 @@ urlpatterns = [
     path('register', register, name='register'),
     path('user_login', user_login, name='user_login'),
     path('user_logout', user_logout, name='user_logout'),
+    path('communities', communities, name='communities'),
+    path('communities/create', create_community, name='create_community'),
+    path('communities/<int:community_id>/', community_detail, name='community_detail'),
 ]
