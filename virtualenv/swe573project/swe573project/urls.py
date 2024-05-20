@@ -31,6 +31,8 @@ from swe573app.views import (
     remove_moderator,
     delete_community,
     activate_community,
+    profile,
+    edit_profile,
 )
 
 urlpatterns = [
@@ -72,4 +74,6 @@ urlpatterns = [
         activate_community,
         name="activate_community",
     ),
+    path("profile/<str:username>/", profile, name="profile"),
+    path("profile/<str:username>/edit/", edit_profile, name="edit_profile"),
 ]

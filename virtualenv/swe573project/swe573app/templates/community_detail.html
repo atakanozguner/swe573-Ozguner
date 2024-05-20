@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1>{{ community.name }}</h1>
-<p>Created by: {{ community.created_by.username }}</p>
+<p>Created by: <a href="{% url 'profile' community.created_by.username %}">{{ community.created_by.username }}</a></p>
 {% if user.is_authenticated and user in community.moderators.all %}
     <p id="description-text">{{ community.description }}</p>
     <button id="edit-button">Edit</button>
@@ -41,7 +41,7 @@ document.getElementById('edit-button').addEventListener('click', function() {
         <tbody>
             {% for follower in community.followers.all %}
                 <tr style="border-bottom: 1px solid #ddd;">
-                    <td>{{ follower.username }}</td>
+                    <td><a href="{% url 'profile' follower.username %}">{{ follower.username }}</a></td>
                     <td>
                         {% if follower == community.created_by %}
                             Creator
@@ -78,28 +78,29 @@ document.getElementById('edit-button').addEventListener('click', function() {
         <input type="submit" value="{% if user in community.followers.all %}Unfollow{% else %}Follow{% endif %}">
     </form>
 {% endif %}
-
+<!-- 
 <h2>Add a new field to the template</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Add Field</button>
-</form>
+</form> -->
 
-{% if user.is_authenticated and user == community.created_by and community.is_active %}
-    <form action="{% url 'delete_community' community.id %}" method="post">
-        {% csrf_token %}
-        <button type="submit" style="background-color: red; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Deactivate Community</button>
-    </form>
-{% endif %}
+<div style="position: fixed; bottom: 0; width: 100%; text-align: center;">
+    {% if user.is_authenticated and user == community.created_by and community.is_active %}
+        <form action="{% url 'delete_community' community.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="background-color: red; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Deactivate Community</button>
+        </form>
+    {% endif %}
 
-
-{% if user.is_authenticated and user == community.created_by and not community.is_active %}
-    <form action="{% url 'activate_community' community.id %}" method="post">
-        {% csrf_token %}
-        <button type="submit" style="background-color: green; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Activate Community</button>
-    </form>
-{% endif %}
+    {% if user.is_authenticated and user == community.created_by and not community.is_active %}
+        <form action="{% url 'activate_community' community.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="background-color: green; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Activate Community</button>
+        </form>
+    {% endif %}
+</div>
 
 
 {% endblock %}

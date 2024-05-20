@@ -35,6 +35,9 @@
                         <a class="nav-link" href="{% url 'communities' %}">Communities</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' username=request.session.username %}">Profile</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#">Welcome, {{ request.session.username }} to SWE573 !</a>
                     </li>
                 {% else %}

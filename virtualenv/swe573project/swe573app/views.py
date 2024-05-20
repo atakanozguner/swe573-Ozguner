@@ -4,8 +4,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import CommunityForm, TemplateFieldForm
-from .models import Community
+from .models import Community, Profile
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import get_user_model
 
 
 def homepage(request):
@@ -194,3 +195,24 @@ def activate_community(request, community_id):
         community.save()
 
     return redirect("community_detail", community_id=community.id)
+
+
+@login_required
+def profile(request, username):
+    user = get_object_or_404(User, username=username)
+    return render(request, "profile.html", {"profile_user": user})
+
+
+@login_required
+def edit_profile(request, username):
+    user = get_object_or_404(User, username=username)
+
+    if request.method == "POST":
+        if request.user == user:
+            new_description = request.POST.get("description")
+            if new_description is not None:
+                user.profile.description = new_description
+                user.profile.save()
+            return redirect("profile", username=user.username)
+
+    return render(request, "edit_profile.html", {"profile_user": user})
