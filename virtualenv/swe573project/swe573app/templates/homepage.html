@@ -7,6 +7,26 @@
     {% if request.session.username %}
     <p class="lead">You are logged in as <strong>{{ request.session.username }}</strong>.</p>
     <p class="lead">You can <a href="{% url 'user_logout' %}">Logout</a> if you want.</p>
+    <h2>Communities you follow (Active)</h2>
+    <ul>
+        {% for community in followed_communities %}
+            {% if community.is_active %}
+                <li><a href="{% url 'community_detail' community.id %}">{{ community.name }}</a></li>
+            {% endif %}
+        {% empty %}
+            <li>You are not following any communities.</li>
+        {% endfor %}
+    </ul>
+    <h2>Communities you follow (Inactive)</h2>
+    <ul>
+        {% for community in followed_communities %}
+            {% if not community.is_active %}
+                <li><a href="{% url 'community_detail' community.id %}">{{ community.name }}</a></li>
+            {% endif %}
+        {% empty %}
+            <li>You are not following any inactive communities.</li>
+        {% endfor %}
+    </ul>
     {% else %}
     <p class="lead">In order to display communities, first <a href="{% url 'user_login' %}">Login</a>.</p>
     <p class="lead">If you don't have an account, please <a href="{% url 'register' %}">Register</a>.</p>

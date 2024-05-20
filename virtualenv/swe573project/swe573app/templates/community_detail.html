@@ -3,26 +3,76 @@
 {% block content %}
 <h1>{{ community.name }}</h1>
 <p>Created by: {{ community.created_by.username }}</p>
+{% if user.is_authenticated and user in community.moderators.all %}
+    <p id="description-text">{{ community.description }}</p>
+    <button id="edit-button">Edit</button>
+    <form id="description-form" method="post" style="display: none;">
+        {% csrf_token %}
+        {{ description_form }}
+        <button type="submit">Save</button>
+    </form>
+{% else %}
+    <p id="description-text">{{ community.description }}</p>
+{% endif %}
 
-<h2>Followers</h2>
+<!-- rest of your template... -->
+
+<script>
+document.getElementById('edit-button').addEventListener('click', function() {
+    document.getElementById('description-form').style.display = 'block';
+    document.getElementById('description-text').style.display = 'none';
+    this.style.display = 'none';
+});
+</script>
+
+
+<h2>Followers ({{ community.followers.count }})</h2>
 <div style="border: 1px solid black; padding: 10px; margin-top: 10px;">
     <table style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr style="border-bottom: 2px solid black;">
                 <th>Username</th>
+                <th>Role</th>
+                {% if user.is_authenticated and user == community.created_by %}
+                    <th>Action</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             {% for follower in community.followers.all %}
                 <tr style="border-bottom: 1px solid #ddd;">
                     <td>{{ follower.username }}</td>
+                    <td>
+                        {% if follower == community.created_by %}
+                            Creator
+                        {% elif follower in community.moderators.all %}
+                            Moderator
+                        {% else %}
+                            Follower
+                        {% endif %}
+                    </td>
+                    {% if user.is_authenticated and user == community.created_by %}
+                        <td>
+                            {% if follower != community.created_by and follower in community.moderators.all %}
+                                <form action="{% url 'remove_moderator' community.id follower.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit">Remove Moderator</button>
+                                </form>
+                            {% elif follower != community.created_by %}
+                                <form action="{% url 'make_moderator' community.id follower.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit">Make Moderator</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and user != community.created_by %}
     <form action="{% url 'follow_community' community.id %}" method="POST">
         {% csrf_token %}
         <input type="submit" value="{% if user in community.followers.all %}Unfollow{% else %}Follow{% endif %}">
@@ -35,4 +85,21 @@
     {{ form.as_p }}
     <button type="submit">Add Field</button>
 </form>
+
+{% if user.is_authenticated and user == community.created_by and community.is_active %}
+    <form action="{% url 'delete_community' community.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" style="background-color: red; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Deactivate Community</button>
+    </form>
+{% endif %}
+
+
+{% if user.is_authenticated and user == community.created_by and not community.is_active %}
+    <form action="{% url 'activate_community' community.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" style="background-color: green; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Activate Community</button>
+    </form>
+{% endif %}
+
+
 {% endblock %}

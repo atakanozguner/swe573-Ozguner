@@ -26,6 +26,11 @@ from swe573app.views import (
     create_community,
     community_detail,
     follow_community,
+    edit_description,
+    make_moderator,
+    remove_moderator,
+    delete_community,
+    activate_community,
 )
 
 urlpatterns = [
@@ -38,6 +43,33 @@ urlpatterns = [
     path("communities/create", create_community, name="create_community"),
     path("communities/<int:community_id>/", community_detail, name="community_detail"),
     path(
-        "community/<int:community_id>/follow", follow_community, name="follow_community"
+        "communities/<int:community_id>/follow",
+        follow_community,
+        name="follow_community",
+    ),
+    path(
+        "communities/<int:community_id>/edit_description/",
+        edit_description,
+        name="edit_description",
+    ),
+    path(
+        "communities/<int:community_id>/make_moderator/<int:user_id>/",
+        make_moderator,
+        name="make_moderator",
+    ),
+    path(
+        "communities/<int:community_id>/remove_moderator/<int:user_id>/",
+        remove_moderator,
+        name="remove_moderator",
+    ),
+    path(
+        "communities/<int:community_id>/delete/",
+        delete_community,
+        name="delete_community",
+    ),
+    path(
+        "community/<int:community_id>/activate/",
+        activate_community,
+        name="activate_community",
     ),
 ]

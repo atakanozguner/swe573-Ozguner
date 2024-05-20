@@ -10,11 +10,18 @@ from django.contrib.auth.models import User
 
 class Community(models.Model):
     name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)  # new field
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     template = models.ForeignKey(
         "CommunityTemplate", on_delete=models.SET_NULL, null=True
     )
     followers = models.ManyToManyField(User, related_name="following", blank=True)
+    moderators = models.ManyToManyField(User, related_name="moderating", blank=True)
+    is_active = models.BooleanField(default=True)  # Add this line
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.moderators.add(self.created_by)
 
 
 class CommunityTemplate(models.Model):
