@@ -3,10 +3,55 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .forms import CommunityForm, TemplateFieldForm
-from .models import Community, Profile
+from .forms import CommunityForm, PostForm, TemplateForm, DynamicPostForm
+from .models import Community, Profile, CommunityTemplate, Post, Template
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
+import json
+
+FIELD_TYPE_CHOICES = [
+    ("text", "Text"),
+    ("number", "Number"),
+    ("date", "Date"),
+    ("boolean", "Boolean"),
+]
+
+
+def create_template(request, community_id):
+    if request.method == "POST":
+        form = TemplateForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data["name"]
+            fields = form.cleaned_data["fields"]
+            # Assuming you have a Template model to save the data
+            Template.objects.create(
+                name=name, fields=json.dumps(fields), community_id=community_id
+            )
+            return redirect(
+                "view_templates", community_id=community_id
+            )  # Redirect to an appropriate view after saving
+    else:
+        form = TemplateForm()
+    return render(
+        request,
+        "create_template.html",
+        {"form": form, "field_choices": FIELD_TYPE_CHOICES},
+    )
+
+
+def view_templates(request, community_id):
+    community = get_object_or_404(Community, pk=community_id)
+    templates = community.templates.all()
+
+    return render(
+        request,
+        "view_templates.html",
+        {
+            "community": community,
+            "templates": templates,
+            "field_choices": dict(FIELD_TYPE_CHOICES),
+        },
+    )
 
 
 def homepage(request):
@@ -83,7 +128,8 @@ def create_community(request):
                 messages.error(request, "User does not exist.")
                 return redirect("user_login")
             community.save()
-            community.followers.add(user)  # Add the creator to the followers list
+            community.followers.add(user)
+            community.moderators.add(user)  # Add the creator to the followers list
             return redirect("communities")
     else:
         form = CommunityForm()
@@ -91,37 +137,58 @@ def create_community(request):
     return render(request, "create_community.html", {"form": form})
 
 
-from .forms import DescriptionForm, TemplateFieldForm
+from .forms import DescriptionForm
 
 
+@login_required
 def community_detail(request, community_id):
     community = get_object_or_404(Community, id=community_id)
+    templates = CommunityTemplate.objects.filter(community=community)
 
     if request.method == "POST":
-        form = TemplateFieldForm(request.POST)
-        description_form = DescriptionForm(request.POST)
-
-        if form.is_valid():
-            field = form.cleaned_data
-            community.template.fields.append(field)
-            community.template.save()
-
-        if description_form.is_valid() and request.user in community.moderators.all():
-            new_description = description_form.cleaned_data.get("description")
-            if new_description is not None:
-                community.description = new_description
+        if "description_submit" in request.POST:
+            description_form = DescriptionForm(request.POST)
+            if (
+                description_form.is_valid()
+                and request.user in community.moderators.all()
+            ):
+                community.description = description_form.cleaned_data.get("description")
                 community.save()
 
+        if "post_submit" in request.POST:
+            selected_template = get_object_or_404(
+                CommunityTemplate, id=request.POST.get("template_id")
+            )
+            fields = json.loads(selected_template.fields)
+            post_form = DynamicPostForm(request.POST, fields=fields)
+            if post_form.is_valid() and request.user in community.followers.all():
+                post_data = {
+                    field_name: post_form.cleaned_data.get(field_name)
+                    for field_name in post_form.fields
+                }
+                Post.objects.create(
+                    title=request.POST.get("title"),
+                    content=request.POST.get("content"),
+                    author=request.user,
+                    community=community,
+                    template=selected_template,
+                    data=json.dumps(post_data),
+                )
     else:
-        form = TemplateFieldForm()
         description_form = DescriptionForm(
             initial={"description": community.description}
         )
+        post_form = PostForm()
 
     return render(
         request,
         "community_detail.html",
-        {"community": community, "form": form, "description_form": description_form},
+        {
+            "community": community,
+            "description_form": description_form,
+            "post_form": post_form,
+            "templates": templates,
+        },
     )
 
 

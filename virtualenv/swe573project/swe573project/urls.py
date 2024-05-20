@@ -33,6 +33,8 @@ from swe573app.views import (
     activate_community,
     profile,
     edit_profile,
+    create_template,
+    view_templates,
 )
 
 urlpatterns = [
@@ -76,4 +78,8 @@ urlpatterns = [
     ),
     path("profile/<str:username>/", profile, name="profile"),
     path("profile/<str:username>/edit/", edit_profile, name="edit_profile"),
+    path(
+        "templates/create/<int:community_id>/", create_template, name="create_template"
+    ),
+    path("templates/view/<int:community_id>/", view_templates, name="view_templates"),
 ]

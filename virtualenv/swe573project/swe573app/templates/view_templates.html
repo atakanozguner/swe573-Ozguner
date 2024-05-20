@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% load custom_tags %}
+
+{% block content %}
+    <h1>Templates for {{ community.name }}</h1>
+
+    {% if templates %}
+        <ul>
+            {% for template in templates %}
+                <li>
+                    <strong>{{ template.name }}</strong><br>
+                    <strong>Fields:</strong>
+                    
+                    <ul>
+                        {% for field in template.fields|parse_json %}
+                            <li>{{ field.name }}: {{ field.type }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No templates found for this community.</p>
+    {% endif %}
+{% endblock %}

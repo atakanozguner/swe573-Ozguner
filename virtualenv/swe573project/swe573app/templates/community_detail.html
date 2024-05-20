@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <h1>{{ community.name }}</h1>
 <p>Created by: <a href="{% url 'profile' community.created_by.username %}">{{ community.created_by.username }}</a></p>
 {% if user.is_authenticated and user in community.moderators.all %}
@@ -9,7 +10,7 @@
     <form id="description-form" method="post" style="display: none;">
         {% csrf_token %}
         {{ description_form }}
-        <button type="submit">Save</button>
+        <button type="submit" name="description_submit">Save</button>
     </form>
 {% else %}
     <p id="description-text">{{ community.description }}</p>
@@ -25,6 +26,10 @@ document.getElementById('edit-button').addEventListener('click', function() {
 });
 </script>
 
+{% if user.is_authenticated and user in community.moderators.all %}
+    <a href="{% url 'view_templates' community.id %}">View Templates</a>
+    <a href="{% url 'create_template' community.id %}">Create Template</a>
+{% endif %}
 
 <h2>Followers ({{ community.followers.count }})</h2>
 <div style="border: 1px solid black; padding: 10px; margin-top: 10px;">
@@ -78,13 +83,28 @@ document.getElementById('edit-button').addEventListener('click', function() {
         <input type="submit" value="{% if user in community.followers.all %}Unfollow{% else %}Follow{% endif %}">
     </form>
 {% endif %}
-<!-- 
-<h2>Add a new field to the template</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Field</button>
-</form> -->
+
+{% if user.is_authenticated and user in community.followers.all %}
+    <h2>New Post</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ post_form.as_p }}
+        <button type="submit" name="post_submit">Post</button>
+    </form>
+{% endif %}
+
+<h2>Posts</h2>
+{% for post in community.posts.all %}
+    <div>
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content }}</p>
+        <p>Posted by {{ post.author.username }} on {{ post.created_at }}</p>
+        <p>Data: {{ post.data }}</p>  <!-- Display the dynamic data -->
+    </div>
+{% empty %}
+    <p>No posts yet.</p>
+{% endfor %}
+
 
 <div style="position: fixed; bottom: 0; width: 100%; text-align: center;">
     {% if user.is_authenticated and user == community.created_by and community.is_active %}
