@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Edit Description for {{ community.name }}</h1>
+<form method="post">
+    {% csrf_token %}
+    <textarea name="description" rows="4" cols="50">{{ community.description }}</textarea>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

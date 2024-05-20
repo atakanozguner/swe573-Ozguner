@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="alert alert-success" role="alert">
+            <p class="lead">You have been logged out.</p>
+            <p class="lead">Redirecting to  <a href="{% url 'homepage' %}">homepage</a></p>
+        </div>
+    </div>
+    <script>
+        setTimeout(function(){
+            window.location.href = "{% url 'user_login' %}";
+        }, 3000);
+    </script>
+{% endblock %}
+

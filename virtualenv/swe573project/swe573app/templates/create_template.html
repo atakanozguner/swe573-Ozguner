@@ -1,0 +1,58 @@
+<!-- create_template.html -->
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.name.label_tag }} {{ form.name }}
+    
+    <div id="fields-container">
+        <div class="field-group">
+            <input type="text" name="field_name" placeholder="Field Name">
+            <select name="field_type">
+                {% for value, display in field_choices %}
+                    <option value="{{ value }}">{{ display }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" onclick="removeField(this)">Remove</button>
+        </div>
+    </div>
+    
+    <button type="button" onclick="addField()">Add Field</button>
+    <input type="hidden" name="fields" id="fields-json">
+    
+    <button type="submit">Create Template</button>
+</form>
+
+<script>
+function addField() {
+    const container = document.getElementById('fields-container');
+    const fieldGroup = document.createElement('div');
+    fieldGroup.className = 'field-group';
+    
+    fieldGroup.innerHTML = `
+        <input type="text" name="field_name" placeholder="Field Name">
+        <select name="field_type">
+            {% for value, display in field_choices %}
+                <option value="{{ value }}">{{ display }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" onclick="removeField(this)">Remove</button>
+    `;
+    
+    container.appendChild(fieldGroup);
+}
+
+function removeField(button) {
+    const fieldGroup = button.parentElement;
+    fieldGroup.remove();
+}
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    const fields = [];
+    document.querySelectorAll('#fields-container .field-group').forEach(function(group) {
+        const fieldName = group.querySelector('input[name="field_name"]').value;
+        const fieldType = group.querySelector('select[name="field_type"]').value;
+        fields.push({ name: fieldName, type: fieldType });
+    });
+    document.getElementById('fields-json').value = JSON.stringify(fields);
+});
+</script>

@@ -1,0 +1,77 @@
+<!-- homepage.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="jumbotron mt-5">
+    <h1 class="display-4">Welcome to SWE573 Community Platform</h1>
+    {% if request.session.username %}
+    <p class="lead">You are logged in as <strong>{{ request.session.username }}</strong>.</p>
+    <p class="lead">You can <a href="{% url 'user_logout' %}">Logout</a> if you want.</p>
+    
+    <style>
+        .community-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .community-table th, .community-table td {
+            border: 1px solid #000000;
+            padding: 8px;
+        }
+        .community-table th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #808080;
+            color: white;
+        }
+    </style>
+    <div style="display: flex; justify-content: space-between;">
+        <div>
+            <h2>Communities you follow (Active)</h2>
+            <table class="community-table">
+                <tr>
+                    <th>Community Name</th>
+                </tr>
+                {% for community in followed_communities %}
+                    {% if community.is_active %}
+                        <tr>
+                            <td><a href="{% url 'community_detail' community.id %}">{{ community.name }}</a></td>
+                        </tr>
+                    {% endif %}
+                {% empty %}
+                    <tr>
+                        <td>You are not following any communities.</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div>
+            <h2>Communities you follow (Inactive)</h2>
+            <table class="community-table">
+                <tr>
+                    <th>Community Name</th>
+                </tr>
+                {% for community in followed_communities %}
+                    {% if not community.is_active %}
+                        <tr>
+                            <td><a href="{% url 'community_detail' community.id %}">{{ community.name }}</a></td>
+                        </tr>
+                    {% endif %}
+                {% empty %}
+                    <tr>
+                        <td>You are not following any inactive communities.</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <p class="lead">In order to display communities, first <a href="{% url 'user_login' %}">Login</a>.</p>
+    <p class="lead">If you don't have an account, please <a href="{% url 'register' %}">Register</a>.</p>
+    {% endif %}
+    <hr class="my-4">
+    <p>Enjoy your stay.</p>
+</div>
+{% endblock %}

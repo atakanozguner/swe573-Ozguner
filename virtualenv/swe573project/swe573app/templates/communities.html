@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Welcome to the Communities Page, {{ request.session.username }}</h1>
+<a class="btn btn-primary" href="{% url 'create_community' %}">Create Community</a>
+
+<div class="container">
+    <h1>Communities</h1>
+    <div class="row">
+        {% for community in communities %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ community.name }}</h5>
+                        <p class="card-text">Created by: {{ community.created_by.username }}</p>
+                        <a href="{% url 'community_detail' community.id %}" class="btn btn-primary">Go to Community</a>                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No communities found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

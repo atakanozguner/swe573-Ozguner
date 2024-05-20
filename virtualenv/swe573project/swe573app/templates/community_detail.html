@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>{{ community.name }}</h1>
+<p>Created by: <a href="{% url 'profile' community.created_by.username %}">{{ community.created_by.username }}</a></p>
+{% if user.is_authenticated and user in community.moderators.all %}
+    <p id="description-text">{{ community.description }}</p>
+    <button id="edit-button">Edit</button>
+    <form id="description-form" method="post" style="display: none;">
+        {% csrf_token %}
+        {{ description_form }}
+        <button type="submit" name="description_submit">Save</button>
+    </form>
+{% else %}
+    <p id="description-text">{{ community.description }}</p>
+{% endif %}
+
+<!-- rest of your template... -->
+
+<script>
+document.getElementById('edit-button').addEventListener('click', function() {
+    document.getElementById('description-form').style.display = 'block';
+    document.getElementById('description-text').style.display = 'none';
+    this.style.display = 'none';
+});
+</script>
+
+{% if user.is_authenticated and user in community.moderators.all %}
+    <a href="{% url 'view_templates' community.id %}">View Templates</a>
+    <a href="{% url 'create_template' community.id %}">Create Template</a>
+{% endif %}
+
+<h2>Followers ({{ community.followers.count }})</h2>
+<div style="border: 1px solid black; padding: 10px; margin-top: 10px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid black;">
+                <th>Username</th>
+                <th>Role</th>
+                {% if user.is_authenticated and user == community.created_by %}
+                    <th>Action</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for follower in community.followers.all %}
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td><a href="{% url 'profile' follower.username %}">{{ follower.username }}</a></td>
+                    <td>
+                        {% if follower == community.created_by %}
+                            Creator
+                        {% elif follower in community.moderators.all %}
+                            Moderator
+                        {% else %}
+                            Follower
+                        {% endif %}
+                    </td>
+                    {% if user.is_authenticated and user == community.created_by %}
+                        <td>
+                            {% if follower != community.created_by and follower in community.moderators.all %}
+                                <form action="{% url 'remove_moderator' community.id follower.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit">Remove Moderator</button>
+                                </form>
+                            {% elif follower != community.created_by %}
+                                <form action="{% url 'make_moderator' community.id follower.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit">Make Moderator</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if user.is_authenticated and user != community.created_by %}
+    <form action="{% url 'follow_community' community.id %}" method="POST">
+        {% csrf_token %}
+        <input type="submit" value="{% if user in community.followers.all %}Unfollow{% else %}Follow{% endif %}">
+    </form>
+{% endif %}
+
+{% if user.is_authenticated and user in community.followers.all %}
+    <h2>New Post</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ post_form.as_p }}
+        <button type="submit" name="post_submit">Post</button>
+    </form>
+{% endif %}
+
+<h2>Posts</h2>
+{% for post in community.posts.all %}
+    <div>
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content }}</p>
+        <p>Posted by {{ post.author.username }} on {{ post.created_at }}</p>
+        <p>Data: {{ post.data }}</p>  <!-- Display the dynamic data -->
+    </div>
+{% empty %}
+    <p>No posts yet.</p>
+{% endfor %}
+<form id="post-form" method="post" action=".">
+    {% csrf_token %}
+    <select id="template-select" name="template_id">
+        <option value="">Select a template</option>
+        {% for template in templates %}
+            <option value="{{ template.id }}">{{ template.name }}</option>
+        {% endfor %}
+    </select>
+    <div id="dynamic-fields"></div>
+    <button type="submit" name="post_submit">Post</button>
+</form>
+
+<script>
+document.getElementById('template-select').addEventListener('change', function() {
+    var fields = JSON.parse(this.options[this.selectedIndex].dataset.fields);
+    var dynamicFieldsContainer = document.getElementById('dynamic-fields');
+    dynamicFieldsContainer.innerHTML = '';
+    fields.forEach(function(field) {
+        var label = document.createElement('label');
+        label.textContent = field.name;
+        var input = document.createElement('input');
+        input.name = field.name;
+        dynamicFieldsContainer.appendChild(label);
+        dynamicFieldsContainer.appendChild(input);
+    });
+});
+</script>
+<script>
+document.getElementById('template-select').addEventListener('change', function() {
+    var fields = JSON.parse(this.value);
+    var dynamicFieldsContainer = document.getElementById('dynamic-fields');
+    dynamicFieldsContainer.innerHTML = '';
+    fields.forEach(function(field) {
+        var label = document.createElement('label');
+        label.textContent = field.name;
+        var input = document.createElement('input');
+        input.name = field.name;
+        dynamicFieldsContainer.appendChild(label);
+        dynamicFieldsContainer.appendChild(input);
+    });
+});
+</script>
+
+
+<div style="position: fixed; bottom: 0; width: 100%; text-align: center;">
+    {% if user.is_authenticated and user == community.created_by and community.is_active %}
+        <form action="{% url 'delete_community' community.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="background-color: red; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Deactivate Community</button>
+        </form>
+    {% endif %}
+
+    {% if user.is_authenticated and user == community.created_by and not community.is_active %}
+        <form action="{% url 'activate_community' community.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="background-color: green; color: white; font-size: 15px; font-weight: bold; padding: 10px 20px;">Activate Community</button>
+        </form>
+    {% endif %}
+</div>
+
+
+{% endblock %}
