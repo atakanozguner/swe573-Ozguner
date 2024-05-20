@@ -1,2 +1,7 @@
+# .gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 swe573_2024_spring_milestone_report_Ozguner_Atakan.md
 swe573_2024_spring_milestone_report_Ozguner_Atakan.pdf

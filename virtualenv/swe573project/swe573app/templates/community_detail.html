@@ -4,6 +4,31 @@
 <h1>{{ community.name }}</h1>
 <p>Created by: {{ community.created_by.username }}</p>
 
+<h2>Followers</h2>
+<div style="border: 1px solid black; padding: 10px; margin-top: 10px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid black;">
+                <th>Username</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for follower in community.followers.all %}
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td>{{ follower.username }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if user.is_authenticated %}
+    <form action="{% url 'follow_community' community.id %}" method="POST">
+        {% csrf_token %}
+        <input type="submit" value="{% if user in community.followers.all %}Unfollow{% else %}Follow{% endif %}">
+    </form>
+{% endif %}
+
 <h2>Add a new field to the template</h2>
 <form method="post">
     {% csrf_token %}

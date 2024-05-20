@@ -14,17 +14,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
-from swe573app.views import homepage, register, user_login, user_logout, communities, create_community, community_detail
+from swe573app.views import (
+    homepage,
+    register,
+    user_login,
+    user_logout,
+    communities,
+    create_community,
+    community_detail,
+    follow_community,
+)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', homepage, name='homepage'),
-    path('register', register, name='register'),
-    path('user_login', user_login, name='user_login'),
-    path('user_logout', user_logout, name='user_logout'),
-    path('communities', communities, name='communities'),
-    path('communities/create', create_community, name='create_community'),
-    path('communities/<int:community_id>/', community_detail, name='community_detail'),
+    path("admin/", admin.site.urls),
+    path("", homepage, name="homepage"),
+    path("register", register, name="register"),
+    path("user_login", user_login, name="user_login"),
+    path("user_logout", user_logout, name="user_logout"),
+    path("communities", communities, name="communities"),
+    path("communities/create", create_community, name="create_community"),
+    path("communities/<int:community_id>/", community_detail, name="community_detail"),
+    path(
+        "community/<int:community_id>/follow", follow_community, name="follow_community"
+    ),
 ]
