@@ -144,6 +144,10 @@ from .forms import DescriptionForm
 def community_detail(request, community_id):
     community = get_object_or_404(Community, id=community_id)
     templates = CommunityTemplate.objects.filter(community=community)
+    post_form = PostForm()  # Define post_form here
+    description_form = DescriptionForm(
+        initial={"description": community.description}
+    )  # Define description_form here
 
     if request.method == "POST":
         if "description_submit" in request.POST:
@@ -156,29 +160,12 @@ def community_detail(request, community_id):
                 community.save()
 
         if "post_submit" in request.POST:
-            selected_template = get_object_or_404(
-                CommunityTemplate, id=request.POST.get("template_id")
-            )
-            fields = json.loads(selected_template.fields)
-            post_form = DynamicPostForm(request.POST, fields=fields)
+            post_form = PostForm(request.POST)
             if post_form.is_valid() and request.user in community.followers.all():
-                post_data = {
-                    field_name: post_form.cleaned_data.get(field_name)
-                    for field_name in post_form.fields
-                }
-                Post.objects.create(
-                    title=request.POST.get("title"),
-                    content=request.POST.get("content"),
-                    author=request.user,
-                    community=community,
-                    template=selected_template,
-                    data=json.dumps(post_data),
-                )
-    else:
-        description_form = DescriptionForm(
-            initial={"description": community.description}
-        )
-        post_form = PostForm()
+                post = post_form.save(commit=False)
+                post.author = request.user
+                post.community = community
+                post.save()
 
     return render(
         request,

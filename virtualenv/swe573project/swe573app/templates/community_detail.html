@@ -104,6 +104,48 @@ document.getElementById('edit-button').addEventListener('click', function() {
 {% empty %}
     <p>No posts yet.</p>
 {% endfor %}
+<form id="post-form" method="post" action=".">
+    {% csrf_token %}
+    <select id="template-select" name="template_id">
+        <option value="">Select a template</option>
+        {% for template in templates %}
+            <option value="{{ template.id }}">{{ template.name }}</option>
+        {% endfor %}
+    </select>
+    <div id="dynamic-fields"></div>
+    <button type="submit" name="post_submit">Post</button>
+</form>
+
+<script>
+document.getElementById('template-select').addEventListener('change', function() {
+    var fields = JSON.parse(this.options[this.selectedIndex].dataset.fields);
+    var dynamicFieldsContainer = document.getElementById('dynamic-fields');
+    dynamicFieldsContainer.innerHTML = '';
+    fields.forEach(function(field) {
+        var label = document.createElement('label');
+        label.textContent = field.name;
+        var input = document.createElement('input');
+        input.name = field.name;
+        dynamicFieldsContainer.appendChild(label);
+        dynamicFieldsContainer.appendChild(input);
+    });
+});
+</script>
+<script>
+document.getElementById('template-select').addEventListener('change', function() {
+    var fields = JSON.parse(this.value);
+    var dynamicFieldsContainer = document.getElementById('dynamic-fields');
+    dynamicFieldsContainer.innerHTML = '';
+    fields.forEach(function(field) {
+        var label = document.createElement('label');
+        label.textContent = field.name;
+        var input = document.createElement('input');
+        input.name = field.name;
+        dynamicFieldsContainer.appendChild(label);
+        dynamicFieldsContainer.appendChild(input);
+    });
+});
+</script>
 
 
 <div style="position: fixed; bottom: 0; width: 100%; text-align: center;">

@@ -63,8 +63,3 @@ class DynamicPostForm(forms.Form):
 
 class DescriptionForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea)
-
-
-class PostForm(forms.Form):
-    title = forms.CharField(max_length=200)
-    content = forms.CharField(widget=forms.Textarea)
