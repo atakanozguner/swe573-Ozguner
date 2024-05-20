@@ -3,7 +3,8 @@
 {% block content %}
     <div class="container">
         <div class="alert alert-success" role="alert">
-            You have been logged out. Redirecting to the login page...
+            <p class="lead">You have been logged out.</p>
+            <p class="lead">Redirecting to  <a href="{% url 'homepage' %}">homepage</a></p>
         </div>
     </div>
     <script>

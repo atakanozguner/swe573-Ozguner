@@ -3,10 +3,15 @@
 
 {% block content %}
 <div class="jumbotron mt-5">
-    <h1 class="display-4">Welcome to Your Website!</h1>
-    <p class="lead">This is a simple homepage created using Bootstrap in Django.</p>
+    <h1 class="display-4">Welcome to SWE573 Community Platform</h1>
+    {% if request.session.username %}
+    <p class="lead">You are logged in as <strong>{{ request.session.username }}</strong>.</p>
+    <p class="lead">You can <a href="{% url 'user_logout' %}">Logout</a> if you want.</p>
+    {% else %}
+    <p class="lead">In order to display communities, first <a href="{% url 'user_login' %}">Login</a>.</p>
+    <p class="lead">If you don't have an account, please <a href="{% url 'register' %}">Register</a>.</p>
+    {% endif %}
     <hr class="my-4">
-    <p>Learn more about our services...</p>
-    <a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a>
+    <p>Enjoy your stay.</p>
 </div>
 {% endblock %}
